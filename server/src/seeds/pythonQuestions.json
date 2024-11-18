@@ -102,7 +102,10 @@
     "question": "What does the range function do?",
     "answers": [
       { "text": "Generates a list of numbers", "isCorrect": true },
-      { "text": "Creates an iterator that generates a sequence of numbers", "isCorrect": true },
+      {
+        "text": "Creates an iterator that generates a sequence of numbers",
+        "isCorrect": true
+      },
       { "text": "Creates a list of tuples", "isCorrect": false },
       { "text": "Generates random numbers", "isCorrect": false }
     ]
@@ -128,7 +131,10 @@
   {
     "question": "What does the method append() do in a list?",
     "answers": [
-      { "text": "Adds a new element at the end of the list", "isCorrect": true },
+      {
+        "text": "Adds a new element at the end of the list",
+        "isCorrect": true
+      },
       { "text": "Removes the last element of the list", "isCorrect": false },
       { "text": "Sorts the list in ascending order", "isCorrect": false },
       { "text": "Removes all elements from the list", "isCorrect": false }
