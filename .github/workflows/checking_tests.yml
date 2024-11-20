@@ -27,6 +27,4 @@ jobs:
         run: npm install
 
       - name: Run Cypress tests
-        run: |
-          # Run Cypress tests
-          if npm cypress run --component
+        run: npm cypress run --component
