@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: test (${{ matrix.node-version }})
+    name: Test (Node.js ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,33 +23,50 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Install dependencies
         run: npm install
 
       - name: Run vitest tests and generate summary
         run: |
-          npm run test-component -- --reporter json --output-file=test-results.json
-          if [ $? -eq 0 ]; then
+          # Run tests and capture the results
+          if npm run test-component -- --reporter json --output-file=test-results.json; then
             RESULTS="Passing ✅"
           else
             RESULTS="Failed ❌"
           fi
 
-          PASSED=$(jq '.stats.passed' test-results.json)
-          FAILED=$(jq '.stats.failed' test-results.json)
-          PENDING=$(jq '.stats.pending' test-results.json)
-          SKIPPED=$(jq '.stats.skipped' test-results.json)
-          DURATION=$(jq '.stats.duration' test-results.json)
+          # Ensure the results file exists
+          if [ -f test-results.json ]; then
+            PASSED=$(jq '.stats.passed' test-results.json)
+            FAILED=$(jq '.stats.failed' test-results.json)
+            PENDING=$(jq '.stats.pending' test-results.json)
+            SKIPPED=$(jq '.stats.skipped' test-results.json)
+            DURATION=$(jq '.stats.duration' test-results.json)
+          else
+            PASSED=0
+            FAILED=0
+            PENDING=0
+            SKIPPED=0
+            DURATION=0
+            RESULTS="Error ❌ - No results file generated"
+          fi
 
+          # Write summary as a Markdown table
           echo "| Results | Passed ✅ | Failed ❌ | Pending ✋ | Skipped ↩ | Duration 🕗 |" > $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|--------|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----------|----------|-----------|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
           echo "| $RESULTS | $PASSED | $FAILED | $PENDING | $SKIPPED | ${DURATION}ms |" >> $GITHUB_STEP_SUMMARY
 
-          exit $?
+          # Exit with the appropriate status
+          if [ "$RESULTS" = "Failed ❌" ]; then
+            exit 1
+          fi
 
-      - name: Upload test summary
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: test-results
+          name: test-results-${{ matrix.node-version }}
           path: test-results.json
