@@ -9,6 +9,10 @@ export default defineConfig({
       bundler: "vite",
       viteConfig,
     },
+    reporter: "json",
+    reporterOptions: {
+      output: "test-results.json",
+    },
   },
 
   e2e: {

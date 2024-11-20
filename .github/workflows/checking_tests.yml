@@ -29,18 +29,18 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run vitest tests and generate summary
+      - name: Run Cypress tests and generate report
         run: |
           OUTPUT_FILE="test-results-${{ matrix.node-version }}.json"
 
-          # Run tests and capture the results
+          # Run Cypress tests
           if npx cypress run --component --reporter json --reporter-options "output=$OUTPUT_FILE"; then
             RESULTS="Passing ✅"
           else
             RESULTS="Failed ❌"
           fi
 
-          # Ensure the results file exists
+          # Verify if the results file exists
           if [ -f "$OUTPUT_FILE" ]; then
             PASSED=$(jq '.stats.passed' "$OUTPUT_FILE" || echo 0)
             FAILED=$(jq '.stats.failed' "$OUTPUT_FILE" || echo 0)
@@ -56,12 +56,15 @@ jobs:
             RESULTS="Error ❌ - No results file generated"
           fi
 
-          # Write summary as a Markdown table
+          # Write summary to GitHub Actions summary
           echo "| Results | Passed ✅ | Failed ❌ | Pending ✋ | Skipped ↩ | Duration 🕗 |" > $GITHUB_STEP_SUMMARY
           echo "|---------|-----------|----------|-----------|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
           echo "| $RESULTS | $PASSED | $FAILED | $PENDING | $SKIPPED | ${DURATION}ms |" >> $GITHUB_STEP_SUMMARY
 
-          # Exit with the appropriate status
+          # Print debug information
+          ls -l $OUTPUT_FILE || echo "$OUTPUT_FILE not found"
+
+          # Exit with appropriate status
           if [ "$RESULTS" = "Failed ❌" ]; then
             exit 1
           fi
@@ -72,3 +75,4 @@ jobs:
         with:
           name: test-results-${{ matrix.node-version }}
           path: test-results-${{ matrix.node-version }}.json
+          if-no-files-found: warn
