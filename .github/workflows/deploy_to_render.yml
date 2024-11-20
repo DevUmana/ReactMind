@@ -11,16 +11,25 @@ jobs:
   ci:
     name: Deploy To Render
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x, 20.x, 18.x] # Define Node.js versions to test
     steps:
       - uses: actions/checkout@v4
-      - name: Test
-        run: |
-          npm install
-          npm run test-component
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }} # Use matrix to test multiple versions
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npm run test-component
 
       - name: Deploy
-        # Only run this step if the branch is main
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && matrix.node-version == '22.x' # Deploy only once for Node 22.x
         env:
           deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
