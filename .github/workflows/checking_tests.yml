@@ -8,8 +8,11 @@ on:
 
 jobs:
   test:
-    name: Checking Tests
+    name: test (${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
 
     steps:
       - name: Checkout code
@@ -18,10 +21,35 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 21.x
+          node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run vitest tests
-        run: npm run test-component
+      - name: Run vitest tests and generate summary
+        run: |
+          npm run test-component -- --reporter json --output-file=test-results.json
+          if [ $? -eq 0 ]; then
+            RESULTS="Passing ✅"
+          else
+            RESULTS="Failed ❌"
+          fi
+
+          PASSED=$(jq '.stats.passed' test-results.json)
+          FAILED=$(jq '.stats.failed' test-results.json)
+          PENDING=$(jq '.stats.pending' test-results.json)
+          SKIPPED=$(jq '.stats.skipped' test-results.json)
+          DURATION=$(jq '.stats.duration' test-results.json)
+
+          echo "| Results | Passed ✅ | Failed ❌ | Pending ✋ | Skipped ↩ | Duration 🕗 |" > $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|--------|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| $RESULTS | $PASSED | $FAILED | $PENDING | $SKIPPED | ${DURATION}ms |" >> $GITHUB_STEP_SUMMARY
+
+          exit $?
+
+      - name: Upload test summary
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-results.json
