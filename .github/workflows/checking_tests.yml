@@ -32,7 +32,7 @@ jobs:
       - name: Run vitest tests and generate summary
         run: |
           # Run tests and capture the results
-          if npm run test-component -- --reporter json --output-file=test-results.json; then
+          if npx cypress run --component --reporter json --reporter-options "output=./test-results.json"; then
             RESULTS="Passing ✅"
           else
             RESULTS="Failed ❌"
