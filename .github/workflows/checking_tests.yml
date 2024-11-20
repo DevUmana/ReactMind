@@ -28,11 +28,3 @@ jobs:
 
       - name: Run vitest tests
         run: npm run test-component
-
-  finalize:
-    name: Aggregate Test Results
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Report Overall Status
-        run: echo "All tests completed successfully!"
