@@ -38,17 +38,21 @@ jobs:
             RESULTS="Failed ❌"
           fi
 
-          # Check if results file exists
-          if [ ! -f test-results.json ]; then
-            echo "test-results.json not found. Creating a placeholder file."
-            echo '{}' > test-results.json
+          # Ensure the results file exists
+          if [ -f test-results.json ]; then
+            PASSED=$(jq '.stats.passed' test-results.json)
+            FAILED=$(jq '.stats.failed' test-results.json)
+            PENDING=$(jq '.stats.pending' test-results.json)
+            SKIPPED=$(jq '.stats.skipped' test-results.json)
+            DURATION=$(jq '.stats.duration' test-results.json)
+          else
+            PASSED=0
+            FAILED=0
+            PENDING=0
+            SKIPPED=0
+            DURATION=0
+            RESULTS="Error ❌ - No results file generated"
           fi
-
-          PASSED=$(jq '.stats.passed // 0' test-results.json)
-          FAILED=$(jq '.stats.failed // 0' test-results.json)
-          PENDING=$(jq '.stats.pending // 0' test-results.json)
-          SKIPPED=$(jq '.stats.skipped // 0' test-results.json)
-          DURATION=$(jq '.stats.duration // 0' test-results.json)
 
           # Write summary as a Markdown table
           echo "| Results | Passed ✅ | Failed ❌ | Pending ✋ | Skipped ↩ | Duration 🕗 |" > $GITHUB_STEP_SUMMARY
@@ -60,15 +64,9 @@ jobs:
             exit 1
           fi
 
-      - name: Debug file path
-        run: |
-          echo "Listing current directory contents:"
-          ls -la
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-results-${{ matrix.node-version }}
           path: test-results.json
-          if-no-files-found: warn
