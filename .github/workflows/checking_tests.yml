@@ -31,20 +31,22 @@ jobs:
 
       - name: Run vitest tests and generate summary
         run: |
+          OUTPUT_FILE="test-results-${{ matrix.node-version }}.json"
+
           # Run tests and capture the results
-          if npx cypress run --component --reporter json --reporter-options "output=./test-results.json"; then
+          if npx cypress run --component --reporter json --reporter-options "output=$OUTPUT_FILE"; then
             RESULTS="Passing ✅"
           else
             RESULTS="Failed ❌"
           fi
 
           # Ensure the results file exists
-          if [ -f test-results.json ]; then
-            PASSED=$(jq '.stats.passed' test-results.json)
-            FAILED=$(jq '.stats.failed' test-results.json)
-            PENDING=$(jq '.stats.pending' test-results.json)
-            SKIPPED=$(jq '.stats.skipped' test-results.json)
-            DURATION=$(jq '.stats.duration' test-results.json)
+          if [ -f "$OUTPUT_FILE" ]; then
+            PASSED=$(jq '.stats.passed' "$OUTPUT_FILE" || echo 0)
+            FAILED=$(jq '.stats.failed' "$OUTPUT_FILE" || echo 0)
+            PENDING=$(jq '.stats.pending' "$OUTPUT_FILE" || echo 0)
+            SKIPPED=$(jq '.stats.skipped' "$OUTPUT_FILE" || echo 0)
+            DURATION=$(jq '.stats.duration' "$OUTPUT_FILE" || echo 0)
           else
             PASSED=0
             FAILED=0
@@ -69,4 +71,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-results-${{ matrix.node-version }}
-          path: test-results.json
+          path: test-results-${{ matrix.node-version }}.json
